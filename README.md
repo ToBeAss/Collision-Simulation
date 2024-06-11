@@ -1,6 +1,6 @@
 # Collision Simulation
 ## Page
-GitHub Pages link
+https://tobeass.github.io/Collision-Simulation/
 ## Credit
 "Building Collision Simulations: An Introduction to Computer Graphics" by Reducible at https://www.youtube.com/watch?v=eED4bSkYCB8
 
