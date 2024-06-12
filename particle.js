@@ -3,13 +3,14 @@ const dampingFactor = 0.95;
 
 class Particle
 {
-    constructor(pos, radius, color)
+    constructor(pos, radius, color, vel)
     {
         this.pos = pos
         this.radius = radius;
         this.color = color;
 
-        this.vel = {x: 10, y: 10}
+        this.vel = vel || {x: 0, y: 0};
+        this.mass = this.radius;
 
         this.instruction = null;
     }
@@ -109,6 +110,67 @@ class Particle
         if (this.pos.y + this.radius >= canvas.height || this.pos.y - this.radius <= 0) {
             this.vel.y = -this.vel.y;
         }
+    }
+
+    checkOtherParticles(particleArray)
+    {
+        for (let otherParticle of particleArray) {
+            if (otherParticle === this) continue;
+            if (this.checkCollision(otherParticle)) {
+                this.collisionResponse(otherParticle);
+            }
+        }
+    }
+
+    checkCollision(otherParticle)
+    {
+        let dx = otherParticle.pos.x - this.pos.x;
+        let dy = otherParticle.pos.y - this.pos.y;
+        let distance = Math.sqrt(dx * dx + dy * dy);
+        return distance < this.radius + otherParticle.radius;
+    }
+
+    collisionResponse(otherParticle)
+    {
+        // STEP 1: Calculate the unit normal and unit tangent vectors
+        let n = {x: otherParticle.pos.x - this.pos.x, y: otherParticle.pos.y - this.pos.y};
+        let un = {x: n.x / Math.sqrt(n.x * n.x + n.y * n.y), y: n.y / Math.sqrt(n.x * n.x + n.y * n.y)};
+        let ut = {x: -un.y, y: un.x};
+
+        // STEP 2: Get initial velocity vectors
+        let v1 = this.vel;
+        let v2 = otherParticle.vel;
+
+        // STEP 3: Calculate scalar velocities in the normal and tangential directions
+        let v1n = v1.x * un.x + v1.y * un.y;
+        let v1t = v1.x * ut.x + v1.y * ut.y;
+        let v2n = v2.x * un.x + v2.y * un.y;
+        let v2t = v2.x * ut.x + v2.y * ut.y;
+
+        // STEP 4: Find the new tangential velocities after collision
+        let v1tPrime = v1t;
+        let v2tPrime = v2t;
+
+        // STEP 5: Find the new normal velocities after collision
+        let m1 = this.mass;
+        let m2 = otherParticle.mass;
+
+        let v1nPrime = (v1n * (m1 - m2) + 2 * m2 * v2n) / (m1 + m2);
+        let v2nPrime = (v2n * (m2 - m1) + 2 * m1 * v1n) / (m1 + m2);
+
+        // STEP 6: Convert scalar normal and tangential velocities into vectors
+        let v1nPrimeVector = {x: v1nPrime * un.x, y: v1nPrime * un.y};
+        let v1tPrimeVector = {x: v1tPrime * ut.x, y: v1tPrime * ut.y};
+        let v2nPrimeVector = {x: v2nPrime * un.x, y: v2nPrime * un.y};
+        let v2tPrimeVector = {x: v2tPrime * ut.x, y: v2tPrime * ut.y};
+
+        // STEP 7: Add the normal and tangential components to get the final velocities
+        let v1Prime = {x: v1nPrimeVector.x + v1tPrimeVector.x, y: v1nPrimeVector.y + v1tPrimeVector.y};
+        let v2Prime = {x: v2nPrimeVector.x + v2tPrimeVector.x, y: v2nPrimeVector.y + v2tPrimeVector.y};
+
+        // Update the velocities of the particles
+        this.vel = v1Prime;
+        otherParticle.vel = v2Prime;
     }
 
     draw()

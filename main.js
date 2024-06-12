@@ -2,7 +2,7 @@
 const updateFrequency = 1000/60;
 const amountOfParticles = 10; // Desired amount of particles
 var particles = [];
-const G = {x: 0, y: 1}; // Gravity
+const G = {x: 0, y: 0}; // Gravity
 setup();
 
 function setup()
@@ -13,8 +13,10 @@ function setup()
         let x = Math.random() * (canvas.width - radius * 4) + radius * 2;
         let y = Math.random() * (canvas.height - radius * 4) + radius * 2;
         let color = `rgb(${Math.random() * 255}, ${Math.random() * 255}, ${Math.random() * 255})`;
+        let vx = Math.random() * 10 - 5;
+        let vy = Math.random() * 10 - 5;
 
-        particles.push(new Particle({x: x, y: y}, radius, color));
+        particles.push(new Particle({x: x, y: y}, radius, color, {x: vx, y: vy}));
     }
 
     // Call update function
@@ -29,6 +31,7 @@ function update()
     for (let particle of particles) {
         particle.update(G);
         particle.continuousEdges(G);
+        particle.checkOtherParticles(particles);
 
         particle.draw();
     }
